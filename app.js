@@ -1,4 +1,4 @@
-// Main React app with simplified icon handling
+// Main React app with simplified icon handling and fixed preview containers
 const RacePlanner = () => {
   // Race details state
   const [raceDetails, setRaceDetails] = React.useState({
@@ -833,7 +833,7 @@ const RacePlanner = () => {
         )}
       </div>
       
-      {/* Print Preview */}
+      {/* Print Preview - FIXED: Added better containment with max-width and overflow handling */}
       {showPreview && (
         <div className={`${printPreviewFullscreen ? 'fixed inset-0 z-50 bg-white p-8 overflow-auto' : 'mt-8 p-4 border rounded'}`}>
           {printPreviewFullscreen && (
@@ -846,14 +846,15 @@ const RacePlanner = () => {
           )}
           
           <h2 className="text-lg font-semibold mb-4">Print Preview</h2>
-          <div id="print-area" className={printPreviewFullscreen ? 'max-w-4xl mx-auto' : ''}>
+          {/* FIXED: Added proper containment with max-width and overflow handling */}
+          <div id="print-area" className={`${printPreviewFullscreen ? 'max-w-3xl mx-auto' : ''} overflow-hidden`}>
             <div className="mb-4">
               <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
                 <p className="font-medium">Preview only - the printed version will be minimal, showing only icons and distances for fitting on bike stems.</p>
               </div>
             </div>
             {/* Race details - shown only in preview, not in print */}
-            <div className="race-info mb-4">
+            <div className="race-info mb-4 flex items-center">
               {teamLogo && (
                 <img src={teamLogo} alt="Team Logo" className="w-12 h-12 mr-4 object-contain" />
               )}
@@ -863,29 +864,34 @@ const RacePlanner = () => {
               </div>
             </div>
             
-            {/* Stem preview */}
-            <div className="w-full h-16 border-2 border-gray-700 rounded bg-white relative">
-              {/* Placed icons */}
-              {sortedIcons.map((icon) => (
-                <div
-                  key={icon.id}
-                  className="absolute top-1 flex flex-col items-center"
-                  style={{ 
-                    left: `${(icon.position / raceDetails.distance) * 100}%`, 
-                    transform: 'translateX(-50%)' 
-                  }}
-                >
-                  {icon.custom ? (
-                    <img src={icon.customSrc} alt={icon.description} className="w-5 h-5" />
-                  ) : (
-                    <div className="w-5 h-5 flex items-center justify-center">
-                      {renderIcon(icon.iconName, 16)}
-                    </div>
-                  )}
-                  <span className="text-[10px] font-bold">{icon.position}KM</span>
-                  <span className="text-[8px] max-w-16 text-center truncate">{icon.description.split(' ')[0]}</span>
-                </div>
-              ))}
+            {/* Stem preview - FIXED: Added constraint with explicit width and proper containment */}
+            <div className="w-full h-16 border-2 border-gray-700 rounded bg-white relative overflow-hidden">
+              {/* Placed icons - FIXED: Improved visibility and contained icons within the stem */}
+              {sortedIcons.map((icon) => {
+                // FIXED: Constrain the position to be within the stem bounds (0-100%)
+                const positionPercent = Math.min(100, Math.max(0, (icon.position / raceDetails.distance) * 100));
+                
+                return (
+                  <div
+                    key={icon.id}
+                    className="absolute top-1 flex flex-col items-center"
+                    style={{ 
+                      left: `${positionPercent}%`, 
+                      transform: 'translateX(-50%)' 
+                    }}
+                  >
+                    {icon.custom ? (
+                      <img src={icon.customSrc} alt={icon.description} className="w-5 h-5" />
+                    ) : (
+                      <div className="w-5 h-5 flex items-center justify-center">
+                        {renderIcon(icon.iconName, 16)}
+                      </div>
+                    )}
+                    <span className="text-[10px] font-bold">{icon.position}KM</span>
+                    <span className="text-[8px] max-w-12 text-center truncate">{icon.description.split(' ')[0]}</span>
+                  </div>
+                );
+              })}
             </div>
             <div className="text-xs text-gray-600 mt-2">
               * When printed, only the stem with icons will be included, sized appropriately for bike stems.
