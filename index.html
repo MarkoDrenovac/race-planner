@@ -10,10 +10,6 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   
-  <!-- IMPORTANT: Include both Lucide libraries -->
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-  <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.min.js"></script>
-  
   <!-- Tailwind CSS for styling -->
   <script src="https://cdn.tailwindcss.com"></script>
   
@@ -45,6 +41,17 @@
       text-align: center;
       padding: 2rem;
       margin-top: 2rem;
+    }
+    
+    /* Responsive styles for mobile devices */
+    @media (max-width: 768px) {
+      .flex-wrap {
+        flex-wrap: wrap;
+      }
+      
+      .grid-cols-2 {
+        grid-template-columns: 1fr !important;
+      }
     }
   </style>
 </head>

@@ -1,51 +1,4 @@
-// Make sure LucideReact is properly accessed
-const LucideReact = window.LucideReact || {};
-
-// Extract icon components from Lucide - add fallback for safety
-const { 
-  Printer, 
-  AlertCircle, 
-  Flag, 
-  Mountain, 
-  Coffee, 
-  Wind, 
-  CheckCircle, 
-  Upload, 
-  Plus, 
-  X, 
-  Eye, 
-  Users,
-  Save,
-  Download,
-  FileUp
-} = LucideReact;
-
-// Backup function to render icons if direct imports fail
-const renderIcon = (iconName, size = 20) => {
-  // Try LucideReact first
-  if (LucideReact && LucideReact[iconName]) {
-    return React.createElement(LucideReact[iconName], { size });
-  }
-  // Fall back to Lucide
-  else if (window.lucide && window.lucide[iconName]) {
-    return React.createElement(window.lucide[iconName], { size });
-  }
-  // Last resort: render a placeholder
-  return <div style={{ width: size, height: size, backgroundColor: '#ccc', borderRadius: '4px' }}></div>;
-};
-
-// Function to safely render an icon component with fallback
-const safeRenderIcon = (IconComponent, size = 20) => {
-  try {
-    return <IconComponent size={size} />;
-  } catch (error) {
-    console.warn(`Failed to render icon component: ${error.message}`);
-    const iconName = IconComponent ? IconComponent.name || 'Unknown' : 'Unknown';
-    return renderIcon(iconName, size);
-  }
-};
-
-// Main Race Planner Component
+// Main React app with simplified icon handling
 const RacePlanner = () => {
   // Race details state
   const [raceDetails, setRaceDetails] = React.useState({
@@ -55,24 +8,24 @@ const RacePlanner = () => {
     startTime: "09:00"
   });
   
-  // Icons state
+  // Icons state with simple string names instead of React components
   const [icons, setIcons] = React.useState([
-    { id: 1, type: 'mountain', position: 25, description: 'Cat 2 Climb', icon: 'Mountain', custom: false },
-    { id: 2, type: 'feed', position: 50, description: 'Feed Zone - Water Bottles', icon: 'Coffee', custom: false, feedDetails: { provider: 'Team Car', type: 'Water Bottles' } },
-    { id: 3, type: 'sprint', position: 75, description: 'Intermediate Sprint', icon: 'Wind', custom: false },
-    { id: 4, type: 'danger', position: 95, description: 'Sharp Turn', icon: 'AlertCircle', custom: false },
-    { id: 5, type: 'finish', position: 120, description: 'Finish Line', icon: 'Flag', custom: false }
+    { id: 1, type: 'mountain', position: 25, description: 'Cat 2 Climb', iconName: 'Mountain', custom: false },
+    { id: 2, type: 'feed', position: 50, description: 'Feed Zone - Water Bottles', iconName: 'Coffee', custom: false, feedDetails: { provider: 'Team Car', type: 'Water Bottles' } },
+    { id: 3, type: 'sprint', position: 75, description: 'Intermediate Sprint', iconName: 'Wind', custom: false },
+    { id: 4, type: 'danger', position: 95, description: 'Sharp Turn', iconName: 'AlertCircle', custom: false },
+    { id: 5, type: 'finish', position: 120, description: 'Finish Line', iconName: 'Flag', custom: false }
   ]);
   
   // Available icons
   const [availableIcons, setAvailableIcons] = React.useState([
-    { type: 'mountain', description: 'Climb', icon: 'Mountain', custom: false },
-    { type: 'feed', description: 'Feed Zone', icon: 'Coffee', custom: false },
-    { type: 'sprint', description: 'Sprint', icon: 'Wind', custom: false },
-    { type: 'danger', description: 'Danger', icon: 'AlertCircle', custom: false },
-    { type: 'finish', description: 'Finish', icon: 'Flag', custom: false },
-    { type: 'checkpoint', description: 'Checkpoint', icon: 'CheckCircle', custom: false },
-    { type: 'team', description: 'Team Support', icon: 'Users', custom: false }
+    { type: 'mountain', description: 'Climb', iconName: 'Mountain', custom: false },
+    { type: 'feed', description: 'Feed Zone', iconName: 'Coffee', custom: false },
+    { type: 'sprint', description: 'Sprint', iconName: 'Wind', custom: false },
+    { type: 'danger', description: 'Danger', iconName: 'AlertCircle', custom: false },
+    { type: 'finish', description: 'Finish', iconName: 'Flag', custom: false },
+    { type: 'checkpoint', description: 'Checkpoint', iconName: 'CheckCircle', custom: false },
+    { type: 'team', description: 'Team Support', iconName: 'Users', custom: false }
   ]);
   
   // UI state
@@ -97,9 +50,49 @@ const RacePlanner = () => {
   const logoInputRef = React.useRef(null);
   const importFileRef = React.useRef(null);
   
-  // Add error handling to hide loading indicator when component mounts
+  // Simplified icon rendering function - uses SVG directly
+  const renderIcon = (iconName, size = 20) => {
+    // Map of simple SVG paths for common icons
+    const iconPaths = {
+      'Mountain': 'M22.5 16.5l-3.85-6.76c-.22-.4-.6-.74-1.02-1-.43-.25-.92-.4-1.43-.4s-1 .15-1.43.4c-.42.26-.8.6-1.03 1l-1.74 3 3.5-3.5a1 1 0 0 1 1 0l4 3.5-2 4Z M11 16.5l-1.27-2.26c-.22-.4-.6-.74-1.02-1-.43-.25-.92-.4-1.43-.4s-1 .15-1.43.4c-.42.26-.8.6-1.03 1l-2.32 4c-.2.35-.23.77-.08 1.16.15.38.44.7.82.85.28.13.6.2.91.2h10.87l-4.02-3.95Z',
+      'Coffee': 'M17 8h1a4 4 0 1 1 0 8h-1 M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z M6 2v2 M10 2v2 M14 2v2',
+      'Wind': 'M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2',
+      'AlertCircle': 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm0-14v4m0 4h.01',
+      'Flag': 'M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z M4 22v-7',
+      'CheckCircle': 'M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4L12 14.01l-3-3',
+      'Upload': 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M17 8l-5-5-5 5 M12 3v12',
+      'Plus': 'M12 5v14 M5 12h14',
+      'X': 'M18 6L6 18 M6 6l12 12',
+      'Eye': 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
+      'Users': 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
+      'Save': 'M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z M17 21v-8H7v8 M7 3v5h8',
+      'Download': 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3',
+      'FileUp': 'M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z M14 2v6h6 M8 18l4-4 4 4 M12 14v7',
+      'Printer': 'M6 9V2h12v7 M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2 M6 14h12v8H6v-8z'
+    };
+
+    const path = iconPaths[iconName] || '';
+    
+    return (
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        width={size} 
+        height={size} 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+        className="icon"
+      >
+        <path d={path} />
+      </svg>
+    );
+  };
+
+  // Hide loading when component mounts
   React.useEffect(() => {
-    // Hide loading indicator when component mounts
     const loadingElement = document.getElementById('loading');
     if (loadingElement) {
       loadingElement.style.display = 'none';
@@ -173,7 +166,7 @@ const RacePlanner = () => {
           type: draggingIcon.type,
           position: dropPosition,
           description: foundIcon.description,
-          icon: foundIcon.icon,
+          iconName: foundIcon.iconName,
           custom: false,
           feedDetails: draggingIcon.type === 'feed' ? { provider: 'Team Staff', type: 'Water Bottles' } : null
         };
@@ -207,7 +200,7 @@ const RacePlanner = () => {
         type: newIconType,
         position: position,
         description: newIconDescription || foundIcon.description,
-        icon: foundIcon.icon,
+        iconName: foundIcon.iconName,
         custom: false,
         feedDetails: newIconType === 'feed' ? { provider: 'Team Staff', type: 'Water Bottles' } : null
       };
@@ -403,12 +396,16 @@ const RacePlanner = () => {
     sortedIconsForPrint.forEach(icon => {
       const positionPercent = (icon.position / raceDetails.distance) * 100;
       
+      let iconHtml = '';
+      if (icon.custom) {
+        iconHtml = `<img src="${icon.customSrc}" alt="${icon.description}" width="20" height="20" />`;
+      } else {
+        iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="${getIconPath(icon.iconName)}"/></svg>`;
+      }
+      
       printWindow.document.write(`
         <div class="icon-item" style="left: ${positionPercent}%; transform: translateX(-50%);">
-          ${icon.custom 
-            ? `<img src="${icon.customSrc}" alt="${icon.description}" />` 
-            : `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-${icon.icon.toLowerCase()}"><use xlink:href="#icon-${icon.icon.toLowerCase()}"></use></svg>`
-          }
+          ${iconHtml}
           <div class="distance-text">${icon.position}KM</div>
           <div class="description-text">${icon.description.split(' ')[0]}</div>
         </div>
@@ -422,6 +419,28 @@ const RacePlanner = () => {
     printWindow.document.write('</body></html>');
     printWindow.document.close();
     printWindow.print();
+    
+    // Icon path helper for print function
+    function getIconPath(iconName) {
+      const paths = {
+        'Mountain': 'M22.5 16.5l-3.85-6.76c-.22-.4-.6-.74-1.02-1-.43-.25-.92-.4-1.43-.4s-1 .15-1.43.4c-.42.26-.8.6-1.03 1l-1.74 3 3.5-3.5a1 1 0 0 1 1 0l4 3.5-2 4Z M11 16.5l-1.27-2.26c-.22-.4-.6-.74-1.02-1-.43-.25-.92-.4-1.43-.4s-1 .15-1.43.4c-.42.26-.8.6-1.03 1l-2.32 4c-.2.35-.23.77-.08 1.16.15.38.44.7.82.85.28.13.6.2.91.2h10.87l-4.02-3.95Z',
+        'Coffee': 'M17 8h1a4 4 0 1 1 0 8h-1 M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z M6 2v2 M10 2v2 M14 2v2',
+        'Wind': 'M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2',
+        'AlertCircle': 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm0-14v4m0 4h.01',
+        'Flag': 'M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z M4 22v-7',
+        'CheckCircle': 'M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4L12 14.01l-3-3',
+        'Upload': 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M17 8l-5-5-5 5 M12 3v12',
+        'Plus': 'M12 5v14 M5 12h14',
+        'X': 'M18 6L6 18 M6 6l12 12',
+        'Eye': 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
+        'Users': 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
+        'Save': 'M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z M17 21v-8H7v8 M7 3v5h8',
+        'Download': 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3',
+        'FileUp': 'M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z M14 2v6h6 M8 18l4-4 4 4 M12 14v7',
+        'Printer': 'M6 9V2h12v7 M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2 M6 14h12v8H6v-8z'
+      };
+      return paths[iconName] || '';
+    }
   };
 
   // Create kilometer markers for the stem
@@ -581,7 +600,7 @@ const RacePlanner = () => {
               {icon.custom ? (
                 <img src={icon.customSrc} alt={icon.description} className="w-6 h-6" />
               ) : (
-                renderIcon(icon.icon, 20)
+                renderIcon(icon.iconName, 20)
               )}
               <span className="text-xs mt-1">{icon.description}</span>
               {icon.custom && (
@@ -690,7 +709,7 @@ const RacePlanner = () => {
               {icon.custom ? (
                 <img src={icon.customSrc} alt={icon.description} className="w-6 h-6" />
               ) : (
-                renderIcon(icon.icon, 20)
+                renderIcon(icon.iconName, 20)
               )}
               <span className="text-xs mt-1 font-bold">{icon.position}KM</span>
               <span className="text-xs mt-1 max-w-16 text-center truncate">{icon.description.split(' ')[0]}</span>
@@ -728,7 +747,7 @@ const RacePlanner = () => {
                     {icon.custom ? (
                       <img src={icon.customSrc} alt={icon.description} className="w-6 h-6" />
                     ) : (
-                      renderIcon(icon.icon, 20)
+                      renderIcon(icon.iconName, 20)
                     )}
                   </td>
                   <td className="p-2 capitalize">{icon.type}</td>
@@ -860,7 +879,7 @@ const RacePlanner = () => {
                     <img src={icon.customSrc} alt={icon.description} className="w-5 h-5" />
                   ) : (
                     <div className="w-5 h-5 flex items-center justify-center">
-                      {renderIcon(icon.icon, 16)}
+                      {renderIcon(icon.iconName, 16)}
                     </div>
                   )}
                   <span className="text-[10px] font-bold">{icon.position}KM</span>
