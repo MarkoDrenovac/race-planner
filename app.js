@@ -833,7 +833,7 @@ const RacePlanner = () => {
         )}
       </div>
       
-      {/* Print Preview - FIXED: Added better containment with max-width and overflow handling */}
+      {/* Print Preview - Completely redesigned with fixed border and content containment */}
       {showPreview && (
         <div className={`${printPreviewFullscreen ? 'fixed inset-0 z-50 bg-white p-8 overflow-auto' : 'mt-8 p-4 border rounded'}`}>
           {printPreviewFullscreen && (
@@ -846,55 +846,83 @@ const RacePlanner = () => {
           )}
           
           <h2 className="text-lg font-semibold mb-4">Print Preview</h2>
-          {/* FIXED: Added proper containment with max-width and overflow handling */}
-          <div id="print-area" className={`${printPreviewFullscreen ? 'max-w-3xl mx-auto' : ''} overflow-hidden`}>
-            <div className="mb-4">
+          
+          {/* Container with strict width control */}
+          <div className="w-full mx-auto" style={{ maxWidth: printPreviewFullscreen ? '800px' : '100%' }}>
+            {/* Preview notification */}
+            <div className="mb-4 w-full">
               <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
                 <p className="font-medium">Preview only - the printed version will be minimal, showing only icons and distances for fitting on bike stems.</p>
               </div>
             </div>
-            {/* Race details - shown only in preview, not in print */}
-            <div className="race-info mb-4 flex items-center">
-              {teamLogo && (
-                <img src={teamLogo} alt="Team Logo" className="w-12 h-12 mr-4 object-contain" />
-              )}
-              <div>
-                <h2 className="text-lg font-bold">{raceDetails.raceName}</h2>
-                <div className="text-sm">Date: {raceDetails.date} | Distance: {raceDetails.distance} km | Start: {raceDetails.startTime}</div>
-              </div>
-            </div>
             
-            {/* Stem preview - FIXED: Added constraint with explicit width and proper containment */}
-            <div className="w-full h-16 border-2 border-gray-700 rounded bg-white relative overflow-hidden">
-              {/* Placed icons - FIXED: Improved visibility and contained icons within the stem */}
-              {sortedIcons.map((icon) => {
-                // FIXED: Constrain the position to be within the stem bounds (0-100%)
-                const positionPercent = Math.min(100, Math.max(0, (icon.position / raceDetails.distance) * 100));
-                
-                return (
-                  <div
-                    key={icon.id}
-                    className="absolute top-1 flex flex-col items-center"
-                    style={{ 
-                      left: `${positionPercent}%`, 
-                      transform: 'translateX(-50%)' 
-                    }}
-                  >
-                    {icon.custom ? (
-                      <img src={icon.customSrc} alt={icon.description} className="w-5 h-5" />
-                    ) : (
-                      <div className="w-5 h-5 flex items-center justify-center">
-                        {renderIcon(icon.iconName, 16)}
-                      </div>
-                    )}
-                    <span className="text-[10px] font-bold">{icon.position}KM</span>
-                    <span className="text-[8px] max-w-12 text-center truncate">{icon.description.split(' ')[0]}</span>
+            {/* Race details with controlled width */}
+            <div id="print-area" className="w-full">
+              <div className="race-info mb-4 flex items-center">
+                {teamLogo && (
+                  <img src={teamLogo} alt="Team Logo" className="w-12 h-12 mr-4 object-contain" />
+                )}
+                <div className="overflow-hidden">
+                  <h2 className="text-lg font-bold truncate">{raceDetails.raceName}</h2>
+                  <div className="text-sm">Date: {raceDetails.date} | Distance: {raceDetails.distance} km | Start: {raceDetails.startTime}</div>
+                </div>
+              </div>
+              
+              {/* Completely redesigned stem preview with fixed dimensions and strict overflow control */}
+              <div className="w-full relative box-border">
+                <div className="h-16 border-2 border-gray-700 rounded bg-white relative overflow-hidden">
+                  {/* Kilometer markers at top */}
+                  <div className="absolute top-0 left-0 w-full">
+                    {Array.from({ length: Math.ceil(raceDetails.distance / 6) + 1 }).map((_, idx) => {
+                      const km = idx * 6;
+                      if (km <= raceDetails.distance) {
+                        const position = (km / raceDetails.distance) * 100;
+                        return (
+                          <div key={idx} className="absolute" style={{ left: `${position}%`, transform: 'translateX(-50%)' }}>
+                            <div className="h-2 border-l border-gray-400"></div>
+                            <div className="text-[9px] -ml-2">{km}</div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })}
                   </div>
-                );
-              })}
-            </div>
-            <div className="text-xs text-gray-600 mt-2">
-              * When printed, only the stem with icons will be included, sized appropriately for bike stems.
+                  
+                  {/* Placed icons with strict positioning */}
+                  {sortedIcons.map((icon) => {
+                    // Enforce strict bounds on position percentage
+                    const positionPercent = Math.min(99, Math.max(1, (icon.position / raceDetails.distance) * 100));
+                    
+                    return (
+                      <div
+                        key={icon.id}
+                        className="absolute flex flex-col items-center z-10"
+                        style={{ 
+                          left: `${positionPercent}%`, 
+                          transform: 'translateX(-50%)',
+                          top: '4px',
+                          maxWidth: '40px'
+                        }}
+                      >
+                        {icon.custom ? (
+                          <img src={icon.customSrc} alt={icon.description} className="w-5 h-5" />
+                        ) : (
+                          <div className="w-5 h-5 flex items-center justify-center">
+                            {renderIcon(icon.iconName, 16)}
+                          </div>
+                        )}
+                        <span className="text-[9px] font-bold whitespace-nowrap">{icon.position}KM</span>
+                        <span className="text-[7px] text-center truncate w-full">{icon.description.split(' ')[0]}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Print instructions */}
+                <div className="text-xs text-gray-600 mt-2 text-center">
+                  * When printed, only the stem with icons will be included, sized appropriately for bike stems.
+                </div>
+              </div>
             </div>
           </div>
         </div>
